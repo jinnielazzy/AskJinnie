@@ -5,8 +5,16 @@ import readline from "readline";
 import { Chalk } from "chalk";
 import Table from 'cli-table';
 import dotenv from 'dotenv';
+import { fileURLToPath } from "url";
+import path from "path";
 
-dotenv.config();
+// Determine the directory of the current script
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({
+  path: path.resolve(__dirname, '.env')
+});
 
 const chalk = new Chalk();
 
@@ -30,8 +38,8 @@ const PR_REPOS = process.env.PR_REPOS.split(",");
 
 async function getIssues() {
   try {
-    console.log(`\n${chalk.blueBright("ISSUES")}`);
-    console.log(`${chalk.bgBlue(`${ORG}/${ISSUES_REPO}: ${ORG_GITHUB_DOMAIN}/${ORG}/${ISSUES_REPO}`)}`);
+    console.log(`\n${chalk.cyan(`Issues in ${ORG}/${ISSUES_REPO} that assigned to ${MASTER}`)}`);
+    console.log(`${chalk.bgBlue(`${ORG_GITHUB_DOMAIN}/${ORG}/${ISSUES_REPO}`)}`);
 
     const res = await axios.get(`${API_DOMAIN}/repos/${ORG}/${ISSUES_REPO}/issues?assignee=${MASTER}&sorted=updated`, {
       headers,
@@ -61,11 +69,11 @@ async function getIssues() {
 }
 
 async function getPRs(repoChoice) {
-  const repoName = PR_REPOS[Number(repoChoice)];
+  const repoName = PR_REPOS[Number(repoChoice - 1)];
 
   try {
-    console.log(`\n${chalk.blueBright("Pull Requests")}`);
-    console.log(`${chalk.bgBlue(`${ORG}/${repoName}: ${ORG_GITHUB_DOMAIN}/${ORG}/${repoName}`)}`)
+    console.log(`\n${chalk.cyan(`Pull requests authored by ${MASTER} in ${repoName}:`)}`);
+    console.log(`${chalk.bgBlue(`${ORG_GITHUB_DOMAIN}/${ORG}/${repoName}`)}`)
 
     const response = await axios.get(`${API_DOMAIN}/repos/${ORG}/${repoName}/pulls?state=open&sort=updated`, {
       headers,
@@ -86,7 +94,6 @@ async function getPRs(repoChoice) {
       table.push([pr.number, pr.title, pr.html_url, chalk.bgGreenBright(pr.state)]);
     });
 
-    console.log(`\n${chalk.cyan(`Pull requests authored by ${MASTER} in ${repoName}:`)}`);
     console.log(table.toString());
   } catch (error) {
     console.error(chalk.red('Error fetching pull requests:'), error.message);
@@ -99,8 +106,9 @@ function main() {
     if (choice === '1') {
       getIssues().then(main);
     } else if (choice === '2') {
-      const options = PR_REPOS.map((repo, index) => `${index}: ${repo}`);
-      const optionIdx = PR_REPOS.map((_, index) => `${index}`);
+      // Offset by 1 for readability and convenience.
+      const options = PR_REPOS.map((repo, index) => `${index + 1}: ${repo}`);
+      const optionIdx = PR_REPOS.map((_, index) => `${index + 1}`);
       rl.question(chalk.yellow(`Which repo? (${options.join(', ')}): `), repoChoice => {
         if (optionIdx.includes(repoChoice)) {
           getPRs(repoChoice).then(main);
