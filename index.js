@@ -38,8 +38,8 @@ const PR_REPOS = process.env.PR_REPOS.split(",");
 
 async function getIssues() {
   try {
-    console.log(`\n${chalk.cyan(`Issues in ${ORG}/${ISSUES_REPO} that assigned to ${MASTER}`)}`);
-    console.log(`${chalk.bgBlue(`${ORG_GITHUB_DOMAIN}/${ORG}/${ISSUES_REPO}`)}`);
+    console.log(`\n${chalk.greenBright(`issues in ${ORG}/${ISSUES_REPO} that assigned to ${MASTER}`)}`);
+    console.log(`${chalk.blue(`${ORG_GITHUB_DOMAIN}/${ORG}/${ISSUES_REPO}`)}`);
 
     const res = await axios.get(`${API_DOMAIN}/repos/${ORG}/${ISSUES_REPO}/issues?assignee=${MASTER}&sorted=updated`, {
       headers,
@@ -48,7 +48,7 @@ async function getIssues() {
     const issues = res.data;
 
   	if (issues.length === 0) {
-      console.log(`\n${chalk.cyan(`No issues assigned to ${MASTER}`)}`);
+      console.log(`\n${chalk.bgCyan(`no issues assigned to ${MASTER}`)}`);
       return;
     }
 
@@ -64,16 +64,13 @@ async function getIssues() {
 
     console.log(table.toString())
   } catch (error) {
-    console.error(chalk.red('Error fetching issues:'), error.message);
+    console.error(chalk.red('error fetching issues:'), error.message);
   }
 }
 
-async function getPRs(repoChoice) {
-  const repoName = PR_REPOS[Number(repoChoice - 1)];
-
+async function getPRsFromRepo(repoName) {
   try {
-    console.log(`\n${chalk.cyan(`Pull requests authored by ${MASTER} in ${repoName}:`)}`);
-    console.log(`${chalk.bgBlue(`${ORG_GITHUB_DOMAIN}/${ORG}/${repoName}`)}`)
+    const prefix = `\n${chalk.greenBright(`pull requests authored by ${MASTER} in ${repoName}:`)}\n${chalk.blue(`${ORG_GITHUB_DOMAIN}/${ORG}/${repoName}`)}\n`;
 
     const response = await axios.get(`${API_DOMAIN}/repos/${ORG}/${repoName}/pulls?state=open&sort=updated`, {
       headers,
@@ -82,8 +79,7 @@ async function getPRs(repoChoice) {
     const prs = response.data.filter(pr => pr.user.login === MASTER);
 
     if (prs.length ===  0) {
-      console.log(chalk.yellow('No pull request'));
-      return;
+      return `${prefix}${chalk.bgCyan('no pull request')}`;
     }
 
     const table = new Table({
@@ -94,14 +90,24 @@ async function getPRs(repoChoice) {
       table.push([pr.number, pr.title, pr.html_url, chalk.bgGreenBright(pr.state)]);
     });
 
-    console.log(table.toString());
+    const finalString = `${prefix}${table.toString()}`;
+    return finalString;
   } catch (error) {
-    console.error(chalk.red('Error fetching pull requests:'), error.message);
+    console.error(chalk.red('error fetching pull requests:'), error.message);
+  }
+}
+
+async function getPRs(choice) {
+  // Choice === repo length + 1, Jinhua selects all repos.
+  const repos = choice === PR_REPOS.length + 1 ? [...PR_REPOS] : [PR_REPOS[choice - 1]];
+  const promises = [];
+  for (const repo of repos) {
+    console.log(await getPRsFromRepo(repo));
   }
 }
 
 function main() {
-  rl.question(chalk.yellow('\nWhat do you want to do? (1. view issues / 2. view prs / 3. quit): '), choice => {
+  rl.question(chalk.yellow('\nhow can i help? (1. view issues / 2. view prs / 3. quit / 4. just chat): '), choice => {
     choice = choice.trim().toLowerCase();
     if (choice === '1') {
       getIssues().then(main);
@@ -109,21 +115,25 @@ function main() {
       // Offset by 1 for readability and convenience.
       const options = PR_REPOS.map((repo, index) => `${index + 1}: ${repo}`);
       const optionIdx = PR_REPOS.map((_, index) => `${index + 1}`);
-      rl.question(chalk.yellow(`Which repo? (${options.join(', ')}): `), repoChoice => {
-        if (optionIdx.includes(repoChoice)) {
-          getPRs(repoChoice).then(main);
+      rl.question(chalk.yellow(`which repo? (${options.join(', ')}, ${options.length + 1}. all): `), choice => {
+        if ([...optionIdx, `${options.length + 1}`].includes(choice)) {
+          getPRs(Number(choice)).then(main);
         } else {
-          console.log(chalk.red('Invalid repo choice.'));
+          console.log(chalk.red('invalid repo choice.'));
           main();
         }
       });
     } else if (choice === '3') {
       rl.close();
+    } else if (choice === '4') {
+      console.log(`\n${chalk.yellow('sadly not there yet, pick another option')}`);
+      main();
     } else {
-      console.log(chalk.red('Invalid choice.'));
+      console.log(chalk.red('invalid choice.'));
       main();
     }
   });
 }
 
+console.log(`哈喽 哈喽 👋 ${MASTER}`);
 main();
