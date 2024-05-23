@@ -72,7 +72,7 @@ async function getPRsFromRepo(repoName) {
   try {
     const prefix = `\n${chalk.greenBright(`pull requests authored by ${MASTER} in ${repoName}:`)}\n${chalk.blue(`${ORG_GITHUB_DOMAIN}/${ORG}/${repoName}`)}\n`;
 
-    const response = await axios.get(`${API_DOMAIN}/repos/${ORG}/${repoName}/pulls?state=open&sort=updated`, {
+    const response = await axios.get(`${API_DOMAIN}/repos/${ORG}/${repoName}/pulls?state=open&sort=long-running`, {
       headers,
     });
 
