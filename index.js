@@ -7,6 +7,8 @@ import Table from 'cli-table';
 import dotenv from 'dotenv';
 import { fileURLToPath } from "url";
 import path from "path";
+import fs from 'fs';
+import os from 'os';
 
 // Determine the directory of the current script
 const __filename = fileURLToPath(import.meta.url);
@@ -106,8 +108,29 @@ async function getPRs(choice) {
   }
 }
 
+function listAndDeleteScreenshots() {
+  const homeDir = os.homedir();
+  const files = fs.readdirSync(`${homeDir}/Desktop/`).filter(file => file.startsWith("Screen") || file.endsWith(".mov") || file.endsWith(".png"));
+
+  if (files.length === 0) {
+    console.log(chalk.bgCyan("no files found, clean!"));
+  } else {
+    console.log(chalk.green("files found:"));
+    files.forEach(file => {
+      const filePath = path.join(`${homeDir}/Desktop/`, file);
+      process.stdout.write(chalk.redBright(`deleting ${filePath} ... `));
+      try {
+        fs.unlinkSync(filePath);
+        console.log(chalk.bgGreenBright('OK'));
+      } catch (error) {
+        console.log(chalk.bgRedBright('GG'));
+      }
+    });
+  }
+}
+
 function main() {
-  rl.question(chalk.yellow('\nhow can i help? (1. view issues / 2. view prs / 3. quit / 4. just chat): '), choice => {
+  rl.question(chalk.yellow('\nhow can i help? (1. view issues / 2. view prs / 3. delete screenshots / 4. just chat / 5. quit): '), choice => {
     choice = choice.trim().toLowerCase();
     if (choice === '1') {
       getIssues().then(main);
@@ -124,10 +147,14 @@ function main() {
         }
       });
     } else if (choice === '3') {
-      rl.close();
+      console.log(`\n${chalk.cyanBright("detele screenshots")}`);
+      listAndDeleteScreenshots();
+      main();
     } else if (choice === '4') {
       console.log(`\n${chalk.yellow('sadly not there yet, pick another option')}`);
       main();
+    } else if (choice === '5') {
+      rl.close();
     } else {
       console.log(chalk.red('invalid choice.'));
       main();
