@@ -74,7 +74,7 @@ async function getPRsFromRepo(repoName) {
   try {
     const prefix = `\n${chalk.greenBright(`pull requests authored by ${MASTER} in ${repoName}:`)}\n${chalk.blue(`${ORG_GITHUB_DOMAIN}/${ORG}/${repoName}`)}\n`;
 
-    const response = await axios.get(`${API_DOMAIN}/repos/${ORG}/${repoName}/pulls?state=open&sort=long-running`, {
+    const response = await axios.get(`${API_DOMAIN}/repos/${ORG}/${repoName}/pulls?state=open`, {
       headers,
     });
 
@@ -102,7 +102,6 @@ async function getPRsFromRepo(repoName) {
 async function getPRs(choice) {
   // Choice === repo length + 1, Jinhua selects all repos.
   const repos = choice === PR_REPOS.length + 1 ? [...PR_REPOS] : [PR_REPOS[choice - 1]];
-  const promises = [];
   for (const repo of repos) {
     console.log(await getPRsFromRepo(repo));
   }
