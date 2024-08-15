@@ -41,7 +41,7 @@ const PR_REPOS = process.env.PR_REPOS.split(",");
 async function getIssues() {
   try {
     console.log(`\n${chalk.greenBright(`Issues in ${ORG}/${ISSUES_REPO} assigned to ${MASTER}`)}`);
-    console.log(`${chalk.blue(`${ORG_GITHUB_DOMAIN}/${ORG}/${ISSUES_REPO}`)}\n`);
+    console.log(`${chalk.blue(`${ORG_GITHUB_DOMAIN}/${ORG}/${ISSUES_REPO}`)}`);
 
     const res = await axios.get(`${API_DOMAIN}/repos/${ORG}/${ISSUES_REPO}/issues?assignee=${MASTER}&sorted=updated`, {
       headers,
@@ -56,9 +56,9 @@ async function getIssues() {
 
     issues.forEach((issue) => {
       const { number, html_url, title } = issue;
-      console.log(`${chalk.bold.yellow('Issue Number:')} ${chalk.magenta(number)}`);
-      console.log(`${chalk.bold.green('Title:')} ${chalk.greenBright(title)}`);
-      console.log(`${chalk.bold.blue('URL:')} ${chalk.blueBright(html_url)}`);
+      console.log(`${chalk.bold.yellow('Issue Number:')} ${chalk.bold.magenta(number)}`);
+      console.log(`${chalk.bold.green('Title:')} ${chalk.bold.greenBright(title)}`);
+      console.log(`${chalk.bold.blue('URL:')} ${chalk.bold.blueBright(html_url)}`);
       console.log(); // Add a blank line between issues
     });
 
