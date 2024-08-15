@@ -37,10 +37,14 @@ const ORG_GITHUB_DOMAIN = process.env.ORG_GITHUB_DOMAIN;
 const ISSUES_REPO = process.env.ISSUES_REPO;
 const PR_REPOS = process.env.PR_REPOS.split(",");
 
+const divider = chalk.gray('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+
 async function getIssues() {
   try {
-    console.log(`\n${chalk.greenBright(`Issues in ${ORG}/${ISSUES_REPO} assigned to ${MASTER}`)}`);
+    console.log(divider);
+    console.log(`${chalk.bgGreenBright.black(` Issues in ${ORG}/${ISSUES_REPO} assigned to ${MASTER} `)}`);
     console.log(`${chalk.blue(`${ORG_GITHUB_DOMAIN}/${ORG}/${ISSUES_REPO}`)}`);
+    console.log(divider);
 
     const res = await axios.get(`${API_DOMAIN}/repos/${ORG}/${ISSUES_REPO}/issues?assignee=${MASTER}&sorted=updated`, {
       headers,
@@ -53,12 +57,12 @@ async function getIssues() {
       return;
     }
 
-    issues.forEach((issue) => {
-      const { number, html_url, title } = issue;
-      console.log(`${chalk.bold.yellow('Issue Number:')} ${chalk.magenta(number)}`);
-      console.log(`${chalk.bold.green('Title:')} ${chalk.greenBright(title)}`);
-      console.log(`${chalk.bold.blue('URL:')} ${chalk.blueBright(html_url)}`);
-      console.log(); // Add a blank line between issues
+    issues.forEach((issue, index) => {
+      console.log(chalk.bold.bgYellowBright.black(` Issue ${index + 1} `));
+      console.log(`${chalk.bold.yellow('Issue Number:')} ${chalk.magenta(issue.number)}`);
+      console.log(`${chalk.bold.green('Title:')} ${chalk.greenBright(issue.title)}`);
+      console.log(`${chalk.bold.blue('URL:')} ${chalk.blueBright(issue.html_url)}`);
+      console.log(divider);
     });
 
   } catch (error) {
@@ -68,7 +72,7 @@ async function getIssues() {
 
 async function getPRsFromRepo(repoName) {
   try {
-    const prefix = `\n${chalk.greenBright(`Pull requests authored by ${MASTER} in ${repoName}:`)}\n${chalk.blue(`${ORG_GITHUB_DOMAIN}/${ORG}/${repoName}`)}\n`;
+    const prefix = `${divider}${chalk.bgGreenBright.black(` Pull requests authored by ${MASTER} in ${repoName} `)}\n${chalk.blue(`${ORG_GITHUB_DOMAIN}/${ORG}/${repoName}`)}${divider}`;
 
     const response = await axios.get(`${API_DOMAIN}/repos/${ORG}/${repoName}/pulls?state=open`, {
       headers,
@@ -76,19 +80,20 @@ async function getPRsFromRepo(repoName) {
 
     const prs = response.data.filter(pr => pr.user.login === MASTER);
 
-    if (prs.length ===  0) {
-      return `${prefix}${chalk.bgCyan('No pull requests')}`;
+    if (prs.length === 0) {
+      return `${prefix}${chalk.bgCyan('No pull requests')}${divider}`;
     }
 
-    const prDetails = prs.map(pr => {
+    const prDetails = prs.map((pr, index) => {
       return (
+        `${chalk.bold.bgYellowBright.black(` PR ${index + 1} `)}\n` +
         `${chalk.bold.yellow('PR Number:')} ${chalk.magenta(pr.number)}\n` +
         `${chalk.bold.green('Title:')} ${chalk.greenBright(pr.title)}\n` +
         `${chalk.bold.blue('URL:')} ${chalk.blueBright(pr.html_url)}\n`
       );
-    }).join('\n');
+    }).join(`${divider}\n`);
 
-    return `${prefix}\n${prDetails}`;
+    return `${prefix}\n${prDetails}${divider}`;
   } catch (error) {
     console.error(chalk.red('Error fetching pull requests:'), error.message);
   }
