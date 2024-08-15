@@ -40,7 +40,7 @@ const PR_REPOS = process.env.PR_REPOS.split(",");
 
 async function getIssues() {
   try {
-    console.log(`\n${chalk.greenBright(`issues in ${ORG}/${ISSUES_REPO} that assigned to ${MASTER}`)}`);
+    console.log(`\n${chalk.greenBright(`Issues in ${ORG}/${ISSUES_REPO} assigned to ${MASTER}`)}`);
     console.log(`${chalk.blue(`${ORG_GITHUB_DOMAIN}/${ORG}/${ISSUES_REPO}`)}`);
 
     const res = await axios.get(`${API_DOMAIN}/repos/${ORG}/${ISSUES_REPO}/issues?assignee=${MASTER}&sorted=updated`, {
@@ -49,24 +49,21 @@ async function getIssues() {
 
     const issues = res.data;
 
-  	if (issues.length === 0) {
-      console.log(`\n${chalk.bgCyan(`no issues assigned to ${MASTER}`)}`);
+    if (issues.length === 0) {
+      console.log(`\n${chalk.bgCyan(`No issues assigned to ${MASTER}`)}`);
       return;
     }
 
-    const table = new Table({
-      head: ['Number', 'Title', 'URL', 'State'].map(h => chalk.magenta(h)),
-    });
-
     issues.forEach((issue) => {
-      const { number, html_url, title, state } = issue;
-      const numberStr = `${number}`;
-      table.push([numberStr, title, html_url, chalk.bgGreenBright(state)]);
+      const { number, html_url, title } = issue;
+      console.log(`${chalk.bold.yellow('Issue Number:')} ${chalk.magenta(number)}`);
+      console.log(`${chalk.bold.green('Title:')} ${chalk.greenBright(title)}`);
+      console.log(`${chalk.bold.blue('URL:')} ${chalk.blueBright(html_url)}`);
+      console.log(); // Add a blank line between issues
     });
 
-    console.log(table.toString())
   } catch (error) {
-    console.error(chalk.red('error fetching issues:'), error.message);
+    console.error(chalk.red('Error fetching issues:'), error.message);
   }
 }
 
