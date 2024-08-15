@@ -69,7 +69,7 @@ async function getIssues() {
 
 async function getPRsFromRepo(repoName) {
   try {
-    const prefix = `\n${chalk.greenBright(`pull requests authored by ${MASTER} in ${repoName}:`)}\n${chalk.blue(`${ORG_GITHUB_DOMAIN}/${ORG}/${repoName}`)}\n`;
+    const prefix = `\n${chalk.greenBright(`Pull requests authored by ${MASTER} in ${repoName}:`)}\n${chalk.blue(`${ORG_GITHUB_DOMAIN}/${ORG}/${repoName}`)}\n`;
 
     const response = await axios.get(`${API_DOMAIN}/repos/${ORG}/${repoName}/pulls?state=open`, {
       headers,
@@ -78,21 +78,20 @@ async function getPRsFromRepo(repoName) {
     const prs = response.data.filter(pr => pr.user.login === MASTER);
 
     if (prs.length ===  0) {
-      return `${prefix}${chalk.bgCyan('no pull request')}`;
+      return `${prefix}${chalk.bgCyan('No pull requests')}`;
     }
 
-    const table = new Table({
-      head: ['Number', 'Title', 'URL', 'State'].map(h => chalk.magenta(h)),
-    });
+    const prDetails = prs.map(pr => {
+      return (
+        `${chalk.bold.yellow('PR Number:')} ${chalk.magenta(pr.number)}\n` +
+        `${chalk.bold.green('Title:')} ${chalk.greenBright(pr.title)}\n` +
+        `${chalk.bold.blue('URL:')} ${chalk.blueBright(pr.html_url)}\n`
+      );
+    }).join('\n');
 
-    prs.forEach(pr => {
-      table.push([pr.number, pr.title, pr.html_url, chalk.bgGreenBright(pr.state)]);
-    });
-
-    const finalString = `${prefix}${table.toString()}`;
-    return finalString;
+    return `${prefix}\n${prDetails}`;
   } catch (error) {
-    console.error(chalk.red('error fetching pull requests:'), error.message);
+    console.error(chalk.red('Error fetching pull requests:'), error.message);
   }
 }
 
