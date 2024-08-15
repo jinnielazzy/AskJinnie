@@ -3,7 +3,6 @@
 import axios from "axios";
 import readline from "readline";
 import { Chalk } from "chalk";
-import Table from 'cli-table';
 import dotenv from 'dotenv';
 import { fileURLToPath } from "url";
 import path from "path";
