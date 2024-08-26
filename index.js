@@ -58,9 +58,9 @@ async function getIssues() {
 
     issues.forEach((issue) => {
       console.log(divider);
-      console.log(chalk.bold.bgYellowBright.black(`Issue ${issue.number} `));
+      console.log(chalk.bold.bgYellowBright.black(`Issue ${issue.number} `), issue.labels.map((label) => chalk.bold.hex(`#${label.color}`)(label.name)).join(" "));
       console.log(`${chalk.bold.green('Title:')} ${chalk.greenBright(issue.title)}`);
-      console.log(`${chalk.bold.blue('URL:')} ${chalk.blueBright(issue.html_url)}`);
+      console.log(`${chalk.bold.blue('ISSUE URL:')} ${chalk.blueBright(issue.html_url)}`);
     });
 
   } catch (error) {
@@ -82,11 +82,11 @@ async function getPRsFromRepo(repoName) {
       return `${prefix}${chalk.bgCyan('\nNo pull requests')}`;
     }
 
-    const prDetails = prs.map((pr, index) => {
+    const prDetails = prs.map((pr) => {
       return (
         `${chalk.bold.bgYellowBright.black(`PR ${pr.number} `)}\n` +
         `${chalk.bold.green('Title:')} ${chalk.greenBright(pr.title)}\n` +
-        `${chalk.bold.blue('URL:')} ${chalk.blueBright(pr.html_url)}\n`
+        `${chalk.bold.blue('PR URL:')} ${chalk.blueBright(pr.html_url)}\n`
       );
     }).join(`${divider}\n`);
 
