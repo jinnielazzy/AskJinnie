@@ -125,37 +125,43 @@ function listAndDeleteScreenshots() {
   }
 }
 
-function main() {
-  rl.question(chalk.yellow('\nhow can i help? (1. view issues / 2. view prs / 3. delete screenshots / 4. just chat / 5. quit): '), choice => {
-    choice = choice.trim().toLowerCase();
-    if (choice === '1') {
-      getIssues().then(main);
-    } else if (choice === '2') {
-      // Offset by 1 for readability and convenience.
+async function main() {
+  let quit = false;
+
+  while (!quit) {
+    const choice = await new Promise(resolve => {
+      rl.question(chalk.yellow('\nhow can i help? (1. view issues / 2. view prs / 3. delete screenshots / 4. just chat / 5. quit): '), resolve);
+    });
+
+    const trimmedChoice = choice.trim().toLowerCase();
+    
+    if (trimmedChoice === '1') {
+      await getIssues();
+    } else if (trimmedChoice === '2') {
       const options = PR_REPOS.map((repo, index) => `${index + 1}: ${repo}`);
       const optionIdx = PR_REPOS.map((_, index) => `${index + 1}`);
-      rl.question(chalk.yellow(`which repo? (${options.join(', ')}, ${options.length + 1}. all): `), choice => {
-        if ([...optionIdx, `${options.length + 1}`].includes(choice)) {
-          getPRs(Number(choice)).then(main);
-        } else {
-          console.log(chalk.red('invalid repo choice.'));
-          main();
-        }
+      const prChoice = await new Promise(resolve => {
+        rl.question(chalk.yellow(`which repo? (${options.join(', ')}, ${options.length + 1}. all): `), resolve);
       });
-    } else if (choice === '3') {
-      console.log(`\n${chalk.cyanBright("detele screenshots")}`);
+
+      if ([...optionIdx, `${options.length + 1}`].includes(prChoice)) {
+        await getPRs(Number(prChoice));
+      } else {
+        console.log(chalk.red('invalid repo choice.'));
+      }
+    } else if (trimmedChoice === '3') {
+      console.log(`\n${chalk.cyanBright("delete screenshots")}`);
       listAndDeleteScreenshots();
-      main();
-    } else if (choice === '4') {
+    } else if (trimmedChoice === '4') {
       console.log(`\n${chalk.yellow('sadly not there yet, pick another option')}`);
-      main();
-    } else if (choice === '5') {
-      rl.close();
+    } else if (trimmedChoice === '5') {
+      quit = true;
     } else {
       console.log(chalk.red('invalid choice.'));
-      main();
     }
-  });
+  }
+
+  rl.close();
 }
 
 console.log(`哈喽 哈喽 👋 ${MASTER}`);
