@@ -39,40 +39,40 @@ const ORG_REPOS = process.env.ORG_REPOS.split(",").map((repo) => {
   return { org, repoName };
 });
 
-const divider = chalk.gray('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+const divider = chalk.hex('#7F8C8D')('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
 async function getIssues() {
   try {
     console.log(divider);
-    console.log(`${chalk.bgGreenBright.black(`Issues in ${ORG}/${ISSUES_REPO} assigned to ${MASTER} `)}`);
-    console.log(`${chalk.blue(`${ORG_GITHUB_DOMAIN}/${ORG}/${ISSUES_REPO}`)}`);
+    console.log(`${chalk.bgHex('#3498DB').whiteBright(` Issues in ${ISSUES_REPO} assigned to ${MASTER} `)}`);
+    console.log(`${chalk.hex('#3498DB').underline(`${ISSUES_REPO}`)}`);
 
-    const res = await axios.get(`${API_DOMAIN}/repos/${ORG}/${ISSUES_REPO}/issues?assignee=${MASTER}&sorted=updated`, {
+    const res = await axios.get(`${API_DOMAIN}/repos/${ISSUES_REPO}/issues?assignee=${MASTER}&sorted=updated`, {
       headers,
     });
 
     const issues = res.data;
 
     if (issues.length === 0) {
-      console.log(`\n${chalk.bgCyan(`No issues assigned to ${MASTER}`)}`);
+      console.log(`\n${chalk.bgHex('#F1C40F').black(' No issues assigned to ')}${chalk.bgHex('#F1C40F').black(MASTER)}`);
       return;
     }
 
     issues.forEach((issue) => {
       console.log(divider);
-      console.log(chalk.bold.bgYellowBright.black(` Issue ${issue.number} `), issue.labels.map((label) => chalk.hex(`#${label.color}`)(label.name)).join(" "));
-      console.log(`${chalk.bold.green('Title:')} ${chalk.greenBright(issue.title)}`);
-      console.log(`${chalk.bold.blue('ISSUE URL:')} ${chalk.blueBright(issue.html_url)}`);
+      console.log(chalk.bgHex('#E67E22').whiteBright(` Issue ${issue.number} `), issue.labels.map((label) => chalk.hex(`#${label.color}`)(label.name)).join(" "));
+      console.log(`${chalk.hex('#27AE60').bold('Title:')} ${chalk.hex('#2ECC71')(issue.title)}`);
+      console.log(`${chalk.hex('#2980B9').bold('ISSUE URL:')} ${chalk.hex('#3498DB').underline(issue.html_url)}`);
     });
 
   } catch (error) {
-    console.error(chalk.red('Error fetching issues:'), error.message);
+    console.error(chalk.bgHex('#E74C3C').white(' Error fetching issues: '), error.message);
   }
 }
 
 async function getPRsFromRepo(org, repoName) {
   try {
-    const prefix = `${chalk.bgGreenBright.black(`Pull requests authored by ${MASTER} in ${repoName} `)}\n${chalk.blue(`${ORG_GITHUB_DOMAIN}/${org}/${repoName}`)}`;
+    const prefix = `${chalk.bgHex('#2E86C1').whiteBright(` Pull requests authored by ${MASTER} in ${org}/${repoName} `)}\n${chalk.hex('#3498DB').underline(`${ORG_GITHUB_DOMAIN}/${org}/${repoName}`)}`;
 
     const response = await axios.get(`${API_DOMAIN}/repos/${org}/${repoName}/pulls?state=open`, {
       headers,
@@ -81,20 +81,20 @@ async function getPRsFromRepo(org, repoName) {
     const prs = response.data.filter(pr => pr.user.login === MASTER);
 
     if (prs.length === 0) {
-      return `${prefix}${chalk.bgCyan('\nNo pull requests')}`;
+      return `${prefix}\n${chalk.bgHex('#F1C40F').black(' No pull requests ')}`;
     }
 
     const prDetails = prs.map((pr) => {
       return (
-        `${chalk.bold.bgYellowBright.black(` PR ${pr.number} `)}\n` +
-        `${chalk.bold.green('Title:')} ${chalk.greenBright(pr.title)}\n` +
-        `${chalk.bold.blue('PR URL:')} ${chalk.blueBright(pr.html_url)}\n`
+        `${chalk.bgHex('#F39C12').black(` PR ${pr.number} `)}\n` +
+        `${chalk.hex('#27AE60').bold('Title:')} ${chalk.hex('#2ECC71')(pr.title)}\n` +
+        `${chalk.hex('#2980B9').bold('PR URL:')} ${chalk.hex('#3498DB').underline(pr.html_url)}\n`
       );
     }).join(`${divider}\n`);
 
     return `${prefix}\n${divider}${prDetails}${divider}`;
   } catch (error) {
-    console.error(chalk.red('Error fetching pull requests:'), error.message);
+    console.error(chalk.bgHex('#E74C3C').white(' Error fetching pull requests: '), error.message);
   }
 }
 
@@ -111,17 +111,17 @@ function listAndDeleteScreenshots() {
   const files = fs.readdirSync(`${homeDir}/Desktop/`).filter(file => file.startsWith("Screen") || file.endsWith(".mov") || file.endsWith(".png"));
 
   if (files.length === 0) {
-    console.log(chalk.bgCyan("no files found, clean!"));
+    console.log(chalk.bgHex('#2ECC71').black(' No files found, clean! '));
   } else {
-    console.log(chalk.green("files found:"));
+    console.log(chalk.hex('#27AE60').bold('Files found:'));
     files.forEach(file => {
       const filePath = path.join(`${homeDir}/Desktop/`, file);
-      process.stdout.write(chalk.redBright(`deleting ${filePath} ... `));
+      process.stdout.write(chalk.hex('#E74C3C')(`Deleting ${filePath} ... `));
       try {
         fs.unlinkSync(filePath);
-        console.log(chalk.bgGreenBright('OK'));
+        console.log(chalk.bgHex('#2ECC71').black(' OK '));
       } catch (error) {
-        console.log(chalk.bgRedBright('GG'));
+        console.log(chalk.bgHex('#E74C3C').white(' GG '));
       }
     });
   }
@@ -132,7 +132,7 @@ async function main() {
 
   while (!quit) {
     const choice = await new Promise(resolve => {
-      rl.question(chalk.yellow('\nhow can i help? (1. view issues / 2. view prs / 3. delete screenshots / 4. just chat / 5. quit): '), resolve);
+      rl.question(chalk.hex('#F39C12')('\nHow can I help? (1. view issues / 2. view prs / 3. delete screenshots / 4. just chat / 5. quit): '), resolve);
     });
 
     const trimmedChoice = choice.trim().toLowerCase();
@@ -143,28 +143,28 @@ async function main() {
       const options = ORG_REPOS.map((orgRepo, index) => `${index + 1}: ${orgRepo.org}/${orgRepo.repoName}`);
       const optionIdx = ORG_REPOS.map((_, index) => `${index + 1}`);
       const prChoice = await new Promise(resolve => {
-        rl.question(chalk.yellow(`which repo? (${options.join(', ')}, ${options.length + 1}. all): `), resolve);
+        rl.question(chalk.hex('#F39C12')(`Which repo? (${options.join(', ')}, ${options.length + 1}. all): `), resolve);
       });
 
       if ([...optionIdx, `${options.length + 1}`].includes(prChoice)) {
         await getPRs(Number(prChoice));
       } else {
-        console.log(chalk.red('invalid repo choice.'));
+        console.log(chalk.bgHex('#E74C3C').white(' Invalid repo choice. '));
       }
     } else if (trimmedChoice === '3') {
-      console.log(`\n${chalk.cyanBright("delete screenshots")}`);
+      console.log(`\n${chalk.hex('#3498DB').bold('Delete screenshots')}`);
       listAndDeleteScreenshots();
     } else if (trimmedChoice === '4') {
-      console.log(`\n${chalk.yellow('sadly not there yet, pick another option')}`);
+      console.log(`\n${chalk.hex('#F1C40F').bold('Sadly not there yet, pick another option')}`);
     } else if (trimmedChoice === '5') {
       quit = true;
     } else {
-      console.log(chalk.red('invalid choice.'));
+      console.log(chalk.bgHex('#E74C3C').white(' Invalid choice. '));
     }
   }
 
   rl.close();
 }
 
-console.log(`哈喽 哈喽 👋 ${MASTER}`);
+console.log(`${chalk.hex('#2E86C1').bold(`哈喽 哈喽 👋 ${MASTER}`)}`);
 main();
