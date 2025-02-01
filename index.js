@@ -30,12 +30,14 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-const ORG = process.env.ORG;
 const MASTER = process.env.MASTER;
 const API_DOMAIN = process.env.API_DOMAIN;
 const ORG_GITHUB_DOMAIN = process.env.ORG_GITHUB_DOMAIN;
 const ISSUES_REPO = process.env.ISSUES_REPO;
-const PR_REPOS = process.env.PR_REPOS.split(",");
+const ORG_REPOS = process.env.ORG_REPOS.split(",").map((repo) => {
+  const [org, repoName] = repo.split("/");
+  return { org, repoName };
+});
 
 const divider = chalk.gray('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
@@ -68,11 +70,11 @@ async function getIssues() {
   }
 }
 
-async function getPRsFromRepo(repoName) {
+async function getPRsFromRepo(org, repoName) {
   try {
-    const prefix = `${chalk.bgGreenBright.black(`Pull requests authored by ${MASTER} in ${repoName} `)}\n${chalk.blue(`${ORG_GITHUB_DOMAIN}/${ORG}/${repoName}`)}`;
+    const prefix = `${chalk.bgGreenBright.black(`Pull requests authored by ${MASTER} in ${repoName} `)}\n${chalk.blue(`${ORG_GITHUB_DOMAIN}/${org}/${repoName}`)}`;
 
-    const response = await axios.get(`${API_DOMAIN}/repos/${ORG}/${repoName}/pulls?state=open`, {
+    const response = await axios.get(`${API_DOMAIN}/repos/${org}/${repoName}/pulls?state=open`, {
       headers,
     });
 
@@ -98,9 +100,9 @@ async function getPRsFromRepo(repoName) {
 
 async function getPRs(choice) {
   // Choice === repo length + 1, Jinhua selects all repos.
-  const repos = choice === PR_REPOS.length + 1 ? [...PR_REPOS] : [PR_REPOS[choice - 1]];
-  for (const repo of repos) {
-    console.log(await getPRsFromRepo(repo));
+  const repos = choice === ORG_REPOS.length + 1 ? [...ORG_REPOS] : [ORG_REPOS[choice - 1]];
+  for (const { org, repoName } of repos) {
+    console.log(await getPRsFromRepo(org, repoName));
   }
 }
 
@@ -138,8 +140,8 @@ async function main() {
     if (trimmedChoice === '1') {
       await getIssues();
     } else if (trimmedChoice === '2') {
-      const options = PR_REPOS.map((repo, index) => `${index + 1}: ${repo}`);
-      const optionIdx = PR_REPOS.map((_, index) => `${index + 1}`);
+      const options = ORG_REPOS.map((orgRepo, index) => `${index + 1}: ${orgRepo.org}/${orgRepo.repoName}`);
+      const optionIdx = ORG_REPOS.map((_, index) => `${index + 1}`);
       const prChoice = await new Promise(resolve => {
         rl.question(chalk.yellow(`which repo? (${options.join(', ')}, ${options.length + 1}. all): `), resolve);
       });
